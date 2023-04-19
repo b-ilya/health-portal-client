@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Gallery from './Gallery.jsx'
 
 function Header({ title }) {
     return <h1>{title ? title : "Default title"}</h1>
@@ -23,6 +24,8 @@ export default function HomePage() {
             </ul>
 
             <button onClick={handleClick}>Like ({likes})</button>
+
+            <Gallery />
         </div>
     )
 }
