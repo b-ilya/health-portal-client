@@ -1,22 +1,35 @@
 import { Fragment } from 'react'
 import { DraftFunction, useImmer } from 'use-immer'
+import useSWR from 'swr'
+import { METHODS } from 'http'
+
+interface Address {
+    streetAddress: string
+    city: string
+    country: string
+    state?: string
+    zip? : string
+}
 
 interface PatientData {
     id: string
     firstName: string
     lastName: string
-    birthday: string
+    birthDate: string
     sex: string
-    country: string
-    state: string
-    city: string
-    streetAddress: string
-    zip: string
-    deleted: boolean
+    address: Address
+    deleted? : boolean
+}
+
+interface PatientListData {
+    patients: PatientData[]
+    totalCount: number
+    count: number
+    offset: number
+    hasMore: false
 }
 
 interface PatientsState {
-    patients: PatientData[]
     selectedPatientId: string | null
     patientEditEnabled: boolean
 }
@@ -27,13 +40,15 @@ const dataPatients: PatientData[] = [
         id: 'f32r3390r0923ir092ie0392ri23rf3',
         firstName: 'Superman',
         lastName: 'Kryptonian',
-        birthday: '1950/02/14',
+        birthDate: '1950/02/14',
         sex: 'male',
-        country: 'US',
-        state: 'NY',
-        city: 'Smallwille',
-        streetAddress: '1, Super str.',
-        zip: '1415',
+        address: {
+            country: 'US',
+            state: 'NY',
+            city: 'Smallwille',
+            streetAddress: '1, Super str.',
+            zip: '1415'
+        },
         deleted: false
     },
     
@@ -41,48 +56,65 @@ const dataPatients: PatientData[] = [
         id: '92ie0392ri23rf3f32r3390r0923ir0',
         firstName: 'Superman Jr.',
         lastName: 'Kryptonian',
-        birthday: '1950/02/14',
+        birthDate: '1950/02/14',
         sex: 'male',
-        country: 'US',
-        state: 'NY',
-        city: 'Smallwille',
-        streetAddress: '1, Super str.',
-        zip: '55123',
+        address: {
+            country: 'US',
+            state: 'NY',
+            city: 'Smallwille',
+            streetAddress: '1, Super str.',
+            zip: '1415'
+        },
         deleted: false
     },
     {
         id: '0r0923ir092ie0392ri23rf3f32r339',
         firstName: 'Superman Sr.',
         lastName: 'Kryptonian',
-        birthday: '1950/02/14',
+        birthDate: '1950/02/14',
         sex: 'male',
-        country: 'US',
-        state: 'NY',
-        city: 'Smallwille',
-        streetAddress: '1, Super str.',
-        zip: '88123',
+        address: {
+            country: 'US',
+            state: 'NY',
+            city: 'Smallwille',
+            streetAddress: '1, Super str.',
+            zip: '1415'
+        },
         deleted: false
     },
     {
         id: 'i23rf3f32r3390r0923ir092ie0392r',
         firstName: 'Superman Dog',
         lastName: 'Kryptonian',
-        birthday: '1950/02/14',
+        birthDate: '1950/02/14',
         sex: 'male',
-        country: 'US',
-        state: 'NY',
-        city: 'Smallwille',
-        streetAddress: '1, Super str.',
-        zip: '-',
+        address: {
+            country: 'US',
+            state: 'NY',
+            city: 'Smallwille',
+            streetAddress: '1, Super str.',
+            zip: '1415'
+        },
         deleted: false
     }
 ]
 
 const Patients: React.FC<void> = () => {
 
+    var headers = new Headers();
+    headers.append("Accept", "application/json");
+    headers.append("Authorization", "Bearer b5454fe7-f0d5-4b6b-a64a-a755262149e8");
+
+    const patientsFetcher = () => fetch('http://localhost:8080/patients', {
+        method: 'GET',
+        headers: headers
+    }).then(res => res.json()) as Promise<PatientListData>;
+
+    const {data: patientsList, error, isLoading} = useSWR<PatientListData>('/patients', patientsFetcher, {
+        revalidateOnFocus: false
+    })
+
     const [state, setState] = useImmer<PatientsState>({
-    
-        patients: dataPatients,
         selectedPatientId: null,
         patientEditEnabled: false
     })
@@ -98,7 +130,7 @@ const Patients: React.FC<void> = () => {
     }
 
     function selectedPatient(): PatientData | undefined {
-        return state.patients.find(patient => { 
+        return patientsList?.patients.find(patient => { 
             return patient.id == state.selectedPatientId 
         })
     }
@@ -116,7 +148,9 @@ const Patients: React.FC<void> = () => {
     }
 
     return (<>
-        <PatientList patients={state.patients} onPatientSelect={select} onAddPatient={openCreateForm} />
+        <PatientList 
+            patients={ error || isLoading || !patientsList ? emptyPatients : patientsList?.patients } 
+            onPatientSelect={select} onAddPatient={openCreateForm} />
         <PatientDetails patient={selectedPatient()} />
     </>)
 }
@@ -129,7 +163,7 @@ interface PatientListProps {
 
 const PatientList: React.FC<PatientListProps> = ({patients, onPatientSelect, onAddPatient}) => {
     if (!patients.length) 
-        return <EmptyList message='No patients added' buttonCation='Add patient' onButtonClick={onAddPatient}/>
+        return <EmptyList />
     else {
         return (
             <ul>
@@ -141,16 +175,8 @@ const PatientList: React.FC<PatientListProps> = ({patients, onPatientSelect, onA
     }
 }
 
-interface EmptyListProps {
-    message: string,
-    buttonCation: string,
-    onButtonClick: () => void
-}
-const EmptyList: React.FC<EmptyListProps> = ({message, buttonCation, onButtonClick}) => {
-    return <Fragment>
-        <div>{message}</div>
-        <button onClick={onButtonClick}>{buttonCation}</button>
-    </Fragment>
+const EmptyList: React.FC<{}> = () => {
+    return <Fragment />
 }
 
 
@@ -165,7 +191,7 @@ const PatientCard: React.FC<PatientCardProps> = ({patient, onSelect}) => {
     return <Fragment>
         <li onClick={() => onSelect(patient.id)}>
             <h3>{patient.firstName} {patient.lastName}</h3>
-            {patient.birthday}, {patient.sex}
+            {patient.birthDate}, {patient.sex}
             
         </li>
     </Fragment>
@@ -189,16 +215,16 @@ const PatientDetails: React.FC<PatientDetailsProps> = ({patient}) => {
     if (!patient) return <Fragment />
 
     return (
-        <table>
+        <table><tbody>
             <PatientDetailsRow label='Name:' value={patient.firstName + ' ' +  patient.lastName} />
-            <PatientDetailsRow label='Birthday:' value={patient.birthday} />
+            <PatientDetailsRow label='Birthday:' value={patient.birthDate} />
             <PatientDetailsRow label='Sex:' value={patient.sex} />
-            <PatientDetailsRow label='Address:' value={patient.streetAddress} />
-            <PatientDetailsRow label='City:' value={patient.city} />
-            <PatientDetailsRow label='State:' value={patient.state} />
-            <PatientDetailsRow label='Country:' value={patient.country} />
-            <PatientDetailsRow label='Zipcode:' value={patient.zip} />
-        </table>
+            <PatientDetailsRow label='Address:' value={patient.address.streetAddress} />
+            <PatientDetailsRow label='City:' value={patient.address.city} />
+            <PatientDetailsRow label='State:' value={patient.address.state || '-'} />
+            <PatientDetailsRow label='Country:' value={patient.address.country} />
+            <PatientDetailsRow label='Zipcode:' value={patient.address.zip || '-'} />
+        </tbody></table>
     )
 }
 
