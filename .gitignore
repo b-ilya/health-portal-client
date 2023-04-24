@@ -1,3 +1,5 @@
 next-env.d.ts
 out
 task.pdf
+
+node_modules

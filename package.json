@@ -9,9 +9,11 @@
         "use-immer": "^0.9.0"
     },
     "scripts": {
+        "prepackage": "npm ci",
         "build": "next build",
         "export": "next export",
-        "serve": "next dev"
+        "serve": "next dev",
+        "package": "next dev : next export"
     },
     "devDependencies": {
         "@types/node": "^18.15.11",
