@@ -103,9 +103,9 @@ const Patients: React.FC<void> = () => {
 
     var headers = new Headers();
     headers.append("Accept", "application/json");
-    headers.append("Authorization", "Bearer b5454fe7-f0d5-4b6b-a64a-a755262149e8");
+    headers.append("Authorization", `Bearer ${process.env.DEV_TOKEN}`);
 
-    const patientsFetcher = () => fetch('http://localhost:8080/patients', {
+    const patientsFetcher = () => fetch(`${process.env.HEALTH_PORTAL_SERVER_URL}/patients`, {
         method: 'GET',
         headers: headers
     }).then(res => res.json()) as Promise<PatientListData>;
