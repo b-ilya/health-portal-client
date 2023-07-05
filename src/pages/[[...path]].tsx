@@ -1,7 +1,25 @@
+import { GetStaticPaths, GetStaticProps} from 'next'
 import { Fragment } from 'react'
-import { DraftFunction, useImmer } from 'use-immer'
+import { useImmer } from 'use-immer'
 import useSWR from 'swr'
-import { METHODS } from 'http'
+import Link from 'next/link'
+
+export const getStaticPaths: GetStaticPaths = async () => {
+    return {
+        paths: [
+            { params: { path: [''] } },
+            { params: { path: ['patients'] } },
+            { params: { path: ['login'] } }
+        ],
+        fallback: false
+    }
+}
+
+export const getStaticProps: GetStaticProps = async (context) => {
+    return {
+        props: {}
+    }
+}
 
 interface Address {
     streetAddress: string
@@ -34,76 +52,15 @@ interface PatientsState {
     patientEditEnabled: boolean
 }
 
-const emptyPatients: PatientData[] = []
-const dataPatients: PatientData[] = [
-    {
-        id: 'f32r3390r0923ir092ie0392ri23rf3',
-        firstName: 'Superman',
-        lastName: 'Kryptonian',
-        birthDate: '1950/02/14',
-        sex: 'male',
-        address: {
-            country: 'US',
-            state: 'NY',
-            city: 'Smallwille',
-            streetAddress: '1, Super str.',
-            zip: '1415'
-        },
-        deleted: false
-    },
-    
-    {
-        id: '92ie0392ri23rf3f32r3390r0923ir0',
-        firstName: 'Superman Jr.',
-        lastName: 'Kryptonian',
-        birthDate: '1950/02/14',
-        sex: 'male',
-        address: {
-            country: 'US',
-            state: 'NY',
-            city: 'Smallwille',
-            streetAddress: '1, Super str.',
-            zip: '1415'
-        },
-        deleted: false
-    },
-    {
-        id: '0r0923ir092ie0392ri23rf3f32r339',
-        firstName: 'Superman Sr.',
-        lastName: 'Kryptonian',
-        birthDate: '1950/02/14',
-        sex: 'male',
-        address: {
-            country: 'US',
-            state: 'NY',
-            city: 'Smallwille',
-            streetAddress: '1, Super str.',
-            zip: '1415'
-        },
-        deleted: false
-    },
-    {
-        id: 'i23rf3f32r3390r0923ir092ie0392r',
-        firstName: 'Superman Dog',
-        lastName: 'Kryptonian',
-        birthDate: '1950/02/14',
-        sex: 'male',
-        address: {
-            country: 'US',
-            state: 'NY',
-            city: 'Smallwille',
-            streetAddress: '1, Super str.',
-            zip: '1415'
-        },
-        deleted: false
-    }
-]
+interface PatientsDashboardProps {
+    loggedIn: boolean
+}
+const PatientsDashboard: React.FC<PatientsDashboardProps> = ({loggedIn}) => {
 
-const Patients: React.FC<void> = () => {
 
     var headers = new Headers();
     headers.append("Accept", "application/json");
-    headers.append("Authorization", `Bearer ${process.env.DEV_TOKEN}`);
+    headers.append("Authorization", `Bearer nonono`);
 
     const patientsFetcher = () => fetch(`${process.env.HEALTH_PORTAL_SERVER_URL}/patients`, {
         method: 'GET',
@@ -148,10 +105,15 @@ const Patients: React.FC<void> = () => {
     }
 
     return (<>
-        <PatientList 
-            patients={ error || isLoading || !patientsList ? emptyPatients : patientsList?.patients } 
+        <PatientList
+            patients={ error || isLoading || !patientsList ? [] : patientsList?.patients } 
             onPatientSelect={select} onAddPatient={openCreateForm} />
         <PatientDetails patient={selectedPatient()} />
+        <Link href="/login" >login</Link>
+        <br />
+        <Link href="/patients" >patients</Link>
+        <br />
+        <Link href="/" >root</Link>
     </>)
 }
 
@@ -228,4 +190,4 @@ const PatientDetails: React.FC<PatientDetailsProps> = ({patient}) => {
     )
 }
 
-export default Patients
+export default PatientsDashboard
